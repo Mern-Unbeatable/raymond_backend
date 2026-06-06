@@ -1,0 +1,361 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PropertyType {
+  SINGLE_FAMILY_HOME
+  TOWNHOMES
+  LAND
+  COMMERCIAL
+}
+
+enum ListingType {
+  WHOLESALE
+  REGULAR
+}
+
+enum InquiryStatus {
+  NEW
+  CONTRACTED
+  CLOSED
+}
+
+enum FeeBuilderProjectType {
+  ARCHITECTURAL_PLANNING
+  CUSTOM_HOME_BUILD
+  DESIGN_BUILD_MANAGEMENT
+  TURNKEY_FINISH
+}
+
+enum RenovationType {
+  KITCHEN_RENOVATION
+  BATHROOM_REMODELING
+  FULL_HOME_MAKEOVER
+  OFFICE_RENOVATION
+}
+
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  phoneNumber  String
+  email        String   @unique
+  address      String?
+  postcode     String?
+  password     String
+  profileImage String?
+  role         Role     @default(USER)
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  inquiries        Inquiry[]
+  sentMessages     Message[]
+  chatParticipants ChatParticipant[]
+}
+
+
+
+model OtpToken {
+  id         String   @id @default(uuid())
+  email      String
+  otp        String
+  expiresAt  DateTime
+  isVerified Boolean  @default(false)
+  isUsed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+}
+
+model Property {
+  id           String       @id @default(uuid())
+  title        String
+  propertyType PropertyType
+  bedrooms     Int?
+  bathrooms    Int?
+  area         String
+  description  String       @db.Text
+  streetAddress String
+  city         String
+  state        String
+  zipCode      String
+  video        String?
+
+  listingType ListingType
+
+  // Regular listing
+  askingPrice Decimal? @db.Decimal(15, 2)
+
+  // Wholesale listing
+  purchasePrice           Decimal? @db.Decimal(15, 2)
+  estimatedRenovationCost Decimal? @db.Decimal(15, 2)
+  arv                     Decimal? @db.Decimal(15, 2)
+  discount                Decimal? @db.Decimal(10, 2)
+
+  // Contact information
+  contactName   String
+  contactNumber String
+  contactEmail  String
+
+  // Geocoded coordinates (auto-populated on create/update)
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images    PropertyImage[]
+  inquiries Inquiry[]
+}
+
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  url        String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+  createdAt  DateTime @default(now())
+}
+
+
+model Portfolio {
+  id                String   @id @default(uuid())
+  title             String
+  description       String   @db.Text
+  projectOverview   String   @db.Text
+  location          String
+  propertyType      PropertyType
+  area              String
+  duration          String
+  budget            String?
+  roi               String?
+  featuredHighlight String   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gallery PortfolioImage[]
+}
+
+model PortfolioImage {
+  id          String    @id @default(uuid())
+  url         String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  portfolioId String
+  createdAt   DateTime  @default(now())
+}
+
+
+model Inquiry {
+  id          String        @id @default(uuid())
+  fullName    String
+  email       String
+  phoneNumber String
+  message     String        @db.Text
+  status      InquiryStatus @default(NEW)
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+
+  // Optional link to registered user
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model ChatRoom {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ChatParticipant[]
+  messages     Message[]
+}
+
+model ChatParticipant {
+  id         String   @id @default(uuid())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoomId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+
+  joinedAt DateTime @default(now())
+
+  @@unique([chatRoomId, userId])
+}
+
+model Message {
+  id      String  @id @default(uuid())
+  content String  @db.Text
+  isRead  Boolean @default(false)
+
+  sender     User     @relation(fields: [senderId], references: [id])
+  senderId   String
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoomId String
+
+  createdAt DateTime @default(now())
+}
+
+
+model FeeBuilderRequest {
+  id                 String                @id @default(uuid())
+  fullName           String
+  email              String
+  phone              String?
+  projectType        FeeBuilderProjectType
+  estimatedBudget    String?
+  projectDescription String?               @db.Text
+  createdAt          DateTime              @default(now())
+}
+
+
+model Construction {
+  id          String   @id @default(uuid())
+  title       String
+  price       Decimal? @db.Decimal(15, 2)
+  bedrooms    Int?
+  bathrooms   Int?
+  area        String?
+  developer   String?
+  location    String?
+  description String?  @db.Text
+  expectedRoi String?
+  areaGrowth  String?
+
+  // Payment Plan (embedded)
+  atBooking          String?
+  foundationComplete String?
+  structureComplete  String?
+  ninetyDaysHandover String?
+  atCompletion       String?
+  paymentNote        String? @db.Text
+
+  images        String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  registrations ConstructionRegistration[]
+}
+
+model ConstructionRegistration {
+  id             String       @id @default(uuid())
+  fullName       String
+  email          String
+  phoneNumber    String
+  construction   Construction @relation(fields: [constructionId], references: [id], onDelete: Cascade)
+  constructionId String
+  createdAt      DateTime     @default(now())
+}
+
+
+model RenovationRequest {
+  id               String          @id @default(uuid())
+  fullName         String
+  phoneNumber      String?
+  email            String
+  propertyLocation String?
+  propertyType     PropertyType?
+  renovationType   RenovationType?
+  budgetRange      String?
+  projectDetails   String?         @db.Text
+  createdAt        DateTime        @default(now())
+}
+
+
+model MortgageApplication {
+  id                String        @id @default(uuid())
+  fullName          String
+  email             String
+  phoneNumber       String
+  employmentStatus  String?
+  annualIncome      Decimal?      @db.Decimal(15, 2)
+  desiredLoanAmount Decimal?      @db.Decimal(15, 2)
+  loanType          String?
+  loanTerm          Int?
+  propertyType      PropertyType?
+
+  // Mortgage Calculator snapshot
+  mortgagePurchaseAmount    Decimal? @db.Decimal(15, 2)
+  mortgageDownPayment       Decimal? @db.Decimal(15, 2)
+  mortgageInterestRate      Decimal? @db.Decimal(5, 3)
+  mortgageLoanTerm          Int?
+  mortgageEstMonthly        Decimal? @db.Decimal(15, 2)
+  mortgagePrincipalInterest Decimal? @db.Decimal(15, 2)
+  mortgagePropertyTax       Decimal? @db.Decimal(15, 2)
+  mortgageHomeInsurance     Decimal? @db.Decimal(15, 2)
+
+  // Refinance Calculator snapshot
+  refinanceLoanAmount       Decimal? @db.Decimal(15, 2)
+  refinanceHomeValue        Decimal? @db.Decimal(15, 2)
+  refinanceInterestRate     Decimal? @db.Decimal(5, 3)
+  refinanceFico             Int?
+  refinanceLoanTerm         Int?
+  refinanceEstMonthly       Decimal? @db.Decimal(15, 2)
+  refinancePrincipalInterest Decimal? @db.Decimal(15, 2)
+  refinancePropertyTax      Decimal? @db.Decimal(15, 2)
+  refinanceHomeInsurance    Decimal? @db.Decimal(15, 2)
+  refinanceHoa              Decimal? @db.Decimal(15, 2)
+  message           String?       @db.Text
+
+  createdAt         DateTime      @default(now())
+}
+
+
+model Investment {
+  id                String   @id @default(uuid())
+  title             String
+  description       String   @db.Text
+  targetRoi         String?
+  timeline          String?
+  minimumInvestment String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  applications InvestmentApplication[]
+}
+
+model InvestmentApplication {
+  id                 String      @id @default(uuid())
+  fullName           String
+  email              String
+  phoneNumber        String
+  investmentInterest String?
+  message            String?     @db.Text
+
+  investment   Investment? @relation(fields: [investmentId], references: [id], onDelete: SetNull)
+  investmentId String?
+
+  createdAt DateTime @default(now())
+}
+
+
+model Consultation {
+  id                      String    @id @default(uuid())
+  fullName                String
+  email                   String
+  phoneNumber             String
+  preferredConsultationDate DateTime?
+  preferredTime           String?
+  additionalInformation   String?   @db.Text
+  createdAt               DateTime  @default(now())
+}
