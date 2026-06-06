@@ -109,7 +109,7 @@ const deletePortfolio = async (id) => {
 };
 
 const addImages = async (id, imageUrls) => {
-  await getPortfolio(id); 
+  await getPortfolio(id);
 
   await prisma.portfolioImage.createMany({
     data: imageUrls.map((url) => ({ url, portfolioId: id })),

@@ -40,7 +40,7 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 app.get("/", (req, res) => {
-  res.json({ message: "Raymond backend running successfully." });
+  res.json({ message: "Raymond backend server is  running successfully." });
 });
 
 app.use("/api/v1", routes);
