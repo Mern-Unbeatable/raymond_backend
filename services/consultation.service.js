@@ -21,7 +21,7 @@ const createConsultation = async ({
     },
   });
 };
-
+// List consultations with pagination
 const listConsultations = async ({ page = 1, limit = 10 }) => {
   const skip = (page - 1) * limit;
   const [consultations, total] = await Promise.all([
