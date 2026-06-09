@@ -24,8 +24,7 @@ const ALLOWED_VIDEO_TYPES = [
   "video/3gpp",
 ];
 
-const MAX_IMAGE_SIZE_MB = 10;
-const MAX_VIDEO_SIZE_MB = 200;
+const DEFAULT_MAX_FILE_SIZE_MB = 200;
 
 const fileFilter = (req, file, cb) => {
   if (
@@ -43,8 +42,8 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-
-const createUpload = (subfolder) => {
+const createUpload = (subfolder, options = {}) => {
+  const { maxFileSizeMB = DEFAULT_MAX_FILE_SIZE_MB } = options;
   const dest = path.join(__dirname, "../uploads", subfolder);
   fs.mkdirSync(dest, { recursive: true });
 
@@ -59,7 +58,7 @@ const createUpload = (subfolder) => {
   return multer({
     storage,
     fileFilter,
-    limits: { fileSize: MAX_VIDEO_SIZE_MB * 1024 * 1024 },
+    limits: { fileSize: maxFileSizeMB * 1024 * 1024 },
   });
 };
 

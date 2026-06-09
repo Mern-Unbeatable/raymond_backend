@@ -32,7 +32,7 @@ const propertySelect = {
     orderBy: { createdAt: "asc" },
   },
 };
-
+// Service functions for property management
 const createProperty = async (data) => {
   const { imageUrls, ...rest } = data;
   const fullAddress = [rest.streetAddress, rest.city, rest.state, rest.zipCode]
@@ -60,7 +60,7 @@ const createProperty = async (data) => {
 
   return property;
 };
-
+// List properties with pagination, filtering, and geospatial search
 const listProperties = async ({
   page = 1,
   limit = 10,

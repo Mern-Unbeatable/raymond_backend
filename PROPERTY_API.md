@@ -44,34 +44,34 @@
 Authorization: Bearer {{token}}
 ```
 
-> Accepts **`multipart/form-data`**. Use the `images` key for file uploads (up to 20 files).  
+> Accepts **`multipart/form-data`**. Use the `images` key for file uploads (up to 30 files).  
 > All price/number fields are optional and should be omitted if not applicable.
 
 ### Form Fields
 
-| Field                     | Type     | Required | Notes                                            |
-| ------------------------- | -------- | -------- | ------------------------------------------------ |
-| `title`                   | Text     | ✅       |                                                  |
-| `propertyType`            | Text     | ✅       | See enum above                                   |
-| `listingType`             | Text     | ✅       | `REGULAR` or `WHOLESALE`                         |
-| `area`                    | Text     | ✅       | e.g. `"1200 sqft"`                               |
-| `description`             | Text     | ✅       |                                                  |
-| `streetAddress`           | Text     | ✅       |                                                  |
-| `city`                    | Text     | ✅       |                                                  |
-| `state`                   | Text     | ✅       |                                                  |
-| `zipCode`                 | Text     | ✅       |                                                  |
-| `contactName`             | Text     | ✅       |                                                  |
-| `contactNumber`           | Text     | ✅       |                                                  |
-| `contactEmail`            | Text     | ✅       |                                                  |
-| `bedrooms`                | Text     | ❌       | Integer                                          |
-| `bathrooms`               | Text     | ❌       | Integer                                          |
-| `video`                   | **File** | ❌       | MP4 / MOV / AVI / MKV / WebM, max 200 MB         |
-| `askingPrice`             | Text     | ❌       | For `REGULAR` listings                           |
-| `purchasePrice`           | Text     | ❌       | For `WHOLESALE` listings                         |
-| `estimatedRenovationCost` | Text     | ❌       | For `WHOLESALE` listings                         |
-| `arv`                     | Text     | ❌       | After-repair value — `WHOLESALE`                 |
-| `discount`                | Text     | ❌       | Percentage — `WHOLESALE`                         |
-| `images`                  | **File** | ❌       | JPEG / PNG / WebP, max 5 MB each, up to 20 files |
+| Field                     | Type     | Required | Notes                                                                    |
+| ------------------------- | -------- | -------- | ------------------------------------------------------------------------ |
+| `title`                   | Text     | ✅       |                                                                          |
+| `propertyType`            | Text     | ✅       | See enum above                                                           |
+| `listingType`             | Text     | ✅       | `REGULAR` or `WHOLESALE`                                                 |
+| `area`                    | Text     | ✅       | e.g. `"1200 sqft"`                                                       |
+| `description`             | Text     | ✅       |                                                                          |
+| `streetAddress`           | Text     | ✅       |                                                                          |
+| `city`                    | Text     | ✅       |                                                                          |
+| `state`                   | Text     | ✅       |                                                                          |
+| `zipCode`                 | Text     | ✅       |                                                                          |
+| `contactName`             | Text     | ✅       |                                                                          |
+| `contactNumber`           | Text     | ✅       |                                                                          |
+| `contactEmail`            | Text     | ✅       |                                                                          |
+| `bedrooms`                | Text     | ❌       | Integer                                                                  |
+| `bathrooms`               | Text     | ❌       | Integer                                                                  |
+| `video`                   | **File** | ❌       | MP4 / MOV / AVI / MKV / WebM, max 60000 MB                               |
+| `askingPrice`             | Text     | ❌       | For `REGULAR` listings                                                   |
+| `purchasePrice`           | Text     | ❌       | For `WHOLESALE` listings                                                 |
+| `estimatedRenovationCost` | Text     | ❌       | For `WHOLESALE` listings                                                 |
+| `arv`                     | Text     | ❌       | After-repair value — `WHOLESALE`                                         |
+| `discount`                | Text     | ❌       | Percentage — `WHOLESALE`                                                 |
+| `images`                  | **File** | ❌       | JPEG / PNG / WebP, max 30 MB each, up to 30 files (combined max 5000 MB) |
 
 **Success Response `201`:**
 
@@ -355,11 +355,11 @@ Authorization: Bearer {{token}}
 Authorization: Bearer {{token}}
 ```
 
-> Accepts **`multipart/form-data`**. Use the `images` key for file uploads (up to 20 files).
+> Accepts **`multipart/form-data`**. Use the `images` key for file uploads (up to 30 files).
 
-| Key      | Type     | Required | Notes                                         |
-| -------- | -------- | -------- | --------------------------------------------- |
-| `images` | **File** | ✅       | At least 1 — JPEG / PNG / WebP, max 5 MB each |
+| Key      | Type     | Required | Notes                                                                |
+| -------- | -------- | -------- | -------------------------------------------------------------------- |
+| `images` | **File** | ✅       | At least 1 — JPEG / PNG / WebP, max 30 MB each, combined max 5000 MB |
 
 **Success Response `201`:**
 

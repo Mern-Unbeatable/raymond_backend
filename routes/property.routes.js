@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require("fs");
 const { body, query } = require("express-validator");
 const {
   createProperty,
@@ -27,22 +28,98 @@ const PROPERTY_TYPES = [
 ];
 const LISTING_TYPES = ["WHOLESALE", "REGULAR"];
 
-// For create: accept images (up to 20) + optional single video
+const MB = 1024 * 1024;
+const PROPERTY_IMAGE_MAX_COUNT = 30;
+const PROPERTY_IMAGE_MAX_SIZE_MB = 30;
+const PROPERTY_IMAGE_TOTAL_MAX_SIZE_MB = 5000;
+const PROPERTY_VIDEO_MAX_SIZE_MB = 60000;
+
+const cleanupUploadedFiles = (files = []) => {
+  for (const file of files) {
+    if (file?.path) {
+      fs.unlink(file.path, () => {});
+    }
+  }
+};
+
+const validatePropertyFiles = (req, res) => {
+  const imageFiles = req.files?.images || [];
+  const videoFile = req.files?.video?.[0] || null;
+
+  if (imageFiles.length > PROPERTY_IMAGE_MAX_COUNT) {
+    return `Maximum ${PROPERTY_IMAGE_MAX_COUNT} images are allowed.`;
+  }
+
+  const maxImageBytes = PROPERTY_IMAGE_MAX_SIZE_MB * MB;
+  for (const image of imageFiles) {
+    if (image.size > maxImageBytes) {
+      return `Each image must be <= ${PROPERTY_IMAGE_MAX_SIZE_MB}MB.`;
+    }
+  }
+
+  const totalImageBytes = imageFiles.reduce((sum, file) => sum + file.size, 0);
+  if (totalImageBytes > PROPERTY_IMAGE_TOTAL_MAX_SIZE_MB * MB) {
+    return `Total image size must be <= ${PROPERTY_IMAGE_TOTAL_MAX_SIZE_MB}MB.`;
+  }
+
+  if (videoFile && videoFile.size > PROPERTY_VIDEO_MAX_SIZE_MB * MB) {
+    return `Video must be <= ${PROPERTY_VIDEO_MAX_SIZE_MB}MB.`;
+  }
+
+  return null;
+};
+
+const validateImageArray = (req, res) => {
+  const imageFiles = req.files || [];
+  const maxImageBytes = PROPERTY_IMAGE_MAX_SIZE_MB * MB;
+
+  for (const image of imageFiles) {
+    if (image.size > maxImageBytes) {
+      return `Each image must be <= ${PROPERTY_IMAGE_MAX_SIZE_MB}MB.`;
+    }
+  }
+
+  const totalImageBytes = imageFiles.reduce((sum, file) => sum + file.size, 0);
+  if (totalImageBytes > PROPERTY_IMAGE_TOTAL_MAX_SIZE_MB * MB) {
+    return `Total image size must be <= ${PROPERTY_IMAGE_TOTAL_MAX_SIZE_MB}MB.`;
+  }
+
+  return null;
+};
+
+// For create/update: accept images + optional single video with size constraints.
 const handlePropertyFiles = (req, res, next) => {
-  createUpload("property").fields([
-    { name: "images", maxCount: 20 },
+  createUpload("property", {
+    maxFileSizeMB: PROPERTY_VIDEO_MAX_SIZE_MB,
+  }).fields([
+    { name: "images", maxCount: PROPERTY_IMAGE_MAX_COUNT },
     { name: "video", maxCount: 1 },
   ])(req, res, (err) => {
     if (err) return errorResponse(res, 400, err.message);
+    const validationError = validatePropertyFiles(req, res);
+    if (validationError) {
+      cleanupUploadedFiles([
+        ...(req.files?.images || []),
+        ...(req.files?.video || []),
+      ]);
+      return errorResponse(res, 400, validationError);
+    }
     next();
   });
 };
 
 const handleImages =
-  (maxCount = 20) =>
+  (maxCount = PROPERTY_IMAGE_MAX_COUNT) =>
   (req, res, next) => {
-    createUpload("property").array("images", maxCount)(req, res, (err) => {
+    createUpload("property", {
+      maxFileSizeMB: PROPERTY_IMAGE_MAX_SIZE_MB,
+    }).array("images", maxCount)(req, res, (err) => {
       if (err) return errorResponse(res, 400, err.message);
+      const validationError = validateImageArray(req, res);
+      if (validationError) {
+        cleanupUploadedFiles(req.files || []);
+        return errorResponse(res, 400, validationError);
+      }
       next();
     });
   };
@@ -244,7 +321,7 @@ router.post(
   "/:id/images",
   authenticate,
   authorizeAdmin,
-  handleImages(20),
+  handleImages(PROPERTY_IMAGE_MAX_COUNT),
   addImages,
 );
 
