@@ -25,7 +25,7 @@ const submitApplication = async (req, res, next) => {
     next(err);
   }
 };
-
+// Admin-only: List all mortgage applications with pagination
 const listApplications = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
