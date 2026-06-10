@@ -38,6 +38,7 @@ const listConsultations = async ({ page = 1, limit = 10 }) => {
   };
 };
 
+// Get a single consultation by ID
 const getConsultation = async (id) => {
   const consultation = await prisma.consultation.findUnique({ where: { id } });
   if (!consultation) {
