@@ -138,6 +138,7 @@ const listProperties = async ({
       return dist <= radius;
     });
 
+    // Manual pagination since we have to filter in-memory
     const total = nearby.length;
     const paginated = nearby.slice(skip, skip + limit);
     return {

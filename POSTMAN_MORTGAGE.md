@@ -347,9 +347,6 @@ Content-Type: application/json
 
 ### Admin endpoint without token
 
-```
-GET {{baseUrl}}/mortgage-applications
-```
 
 **Response (401):** Unauthorized
 
